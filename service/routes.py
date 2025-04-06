@@ -106,17 +106,35 @@ def create_products():
 # R E A D   A   P R O D U C T
 ######################################################################
 
-#
-# PLACE YOUR CODE HERE TO READ A PRODUCT
-#
+@app.route('/products/<int:products_id>', methods=['GET'])
+def get_product(products_id):
+    """ Retrieve a single product based on id """
+
+    product = Product.find(products_id)
+    if product is None:
+        abort(status.HTTP_404_NOT_FOUND, f"Product with id f{products_id} was not found")
+
+    app.logger.info("Returning product: %s", product.name)
+    return product.serialize(), status.HTTP_200_OK
 
 ######################################################################
 # U P D A T E   A   P R O D U C T
 ######################################################################
 
-#
-# PLACE YOUR CODE TO UPDATE A PRODUCT HERE
-#
+@app.route('/products/<int:products_id>', methods=['PUT'])
+def update_product(products_id):
+    """ Update a single product based on id """
+
+    app.logger.info("Request to update product with id: %s", products_id)
+    product = Product.find(products_id)
+    if product is None:
+        abort(status.HTTP_404_NOT_FOUND, f"Product with id f{products_id} was not found")
+
+    product.deserialize(request.get_json())
+    product.id = products_id
+    product.update()
+
+    return product.serialize(), status.HTTP_200_OK
 
 ######################################################################
 # D E L E T E   A   P R O D U C T
