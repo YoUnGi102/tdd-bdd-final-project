@@ -22,6 +22,7 @@ from flask import jsonify, request, abort
 from flask import url_for  # noqa: F401 pylint: disable=unused-import
 from service.models import Product
 from service.common import status  # HTTP Status Codes
+from service.models import Product, Category
 from . import app
 
 
@@ -98,9 +99,31 @@ def create_products():
 # L I S T   A L L   P R O D U C T S
 ######################################################################
 
-#
-# PLACE YOUR CODE TO LIST ALL PRODUCTS HERE
-#
+@app.route("/products", methods=["GET"])
+def get_all_products():
+    """ Retrieve all products """
+
+    name = request.args.get('name')
+    category = request.args.get('category')
+    available = request.args.get('available')
+    products = []
+    if name:
+        app.logger.info('Find by name: %s', name)
+        products = Product.find_by_name(name)
+    elif category:
+        app.logger.info("Find by category: %s", category)
+        # Create enum from string
+        category_value = getattr(Category, category.upper())
+        products = Product.find_by_category(category_value)
+    elif available:
+        app.logger.info("Find by category: %s", available)
+        available_value = available.lower() in ["true", "yes", "1"]
+        products = Product.find_by_availability(available_value)
+    else:
+        products = Product.all()
+    result = list(map(lambda product: product.serialize(), products))
+    return result, status.HTTP_200_OK
+
 
 ######################################################################
 # R E A D   A   P R O D U C T
@@ -140,7 +163,14 @@ def update_product(products_id):
 # D E L E T E   A   P R O D U C T
 ######################################################################
 
+@app.route('/products/<int:products_id>', methods=['DELETE'])
+def delete_product(products_id):
+    """ Delete a single product based on id """
 
-#
-# PLACE YOUR CODE TO DELETE A PRODUCT HERE
-#
+    app.logger.info("Request to delete product with id: %s", products_id)
+    product = Product.find(products_id)
+    if product is None:
+        abort(status.HTTP_404_NOT_FOUND, f"Product with id f{products_id} was not found")
+
+    product.delete()
+    return "", status.HTTP_204_NO_CONTENT
