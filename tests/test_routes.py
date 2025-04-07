@@ -284,3 +284,30 @@ class TestProductRoutes(TestCase):
         self.assertEqual(product_count, len(response.get_json()))
         for prod in response.get_json():
             self.assertEqual(prod["available"], available)
+
+    def test_list_products_by_price(self):
+        """ It should list all products by price """
+
+        # Create a product
+        products = self._create_products(5)
+        price = products[0].price
+        product_count = 0
+        for prod in products:
+            if prod.price == price:
+                product_count += 1
+
+        response = self.client.get(BASE_URL, query_string=f"price={quote_plus(str(price))}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(product_count, len(response.get_json()))
+        for prod in response.get_json():
+            self.assertEqual(float(prod["price"]), float(price))
+
+    def test_delete_nonexisting_product(self):
+        """It should not return a product and return 404"""
+
+        # Create a product
+        test_product = self._create_products()[0]
+
+        # Update a product
+        response = self.client.delete(f"{BASE_URL}/{100000}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

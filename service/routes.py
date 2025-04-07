@@ -106,6 +106,7 @@ def get_all_products():
     name = request.args.get('name')
     category = request.args.get('category')
     available = request.args.get('available')
+    price = request.args.get('price')
     products = []
     if name:
         app.logger.info('Find by name: %s', name)
@@ -119,6 +120,9 @@ def get_all_products():
         app.logger.info("Find by category: %s", available)
         available_value = available.lower() in ["true", "yes", "1"]
         products = Product.find_by_availability(available_value)
+    elif price:
+        app.logger.info('Find by price: %s', price)
+        products = Product.find_by_price(float(price))
     else:
         products = Product.all()
     result = list(map(lambda product: product.serialize(), products))
